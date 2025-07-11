@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Header from "@/components/Header";
 import Home from "@/pages/Home";
 import Contract from "@/pages/Contract";
+import OAuthLogin from "@/components/OAuthLogin";
 
 export default function App() {
   return (
@@ -26,6 +27,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/contract" element={<Contract />} />
+        <Route path="/login/oauth/kakao/callback" element={<OAuthLogin provider="kakao"/>} />
+        <Route path="/login/oauth/google/callback" element={<OAuthLogin provider="google"/>} />
       </Routes>
     </Router>
   );
