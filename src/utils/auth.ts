@@ -1,5 +1,4 @@
-export function isLoggedInFromCookie(): boolean {
-    const cookie = document.cookie;
-    return cookie.includes("auth=true");
-  }
-  
+export function isLoggedInFromSession(): boolean {
+  const accessToken = sessionStorage.getItem("access_token");
+  return !!accessToken;
+}

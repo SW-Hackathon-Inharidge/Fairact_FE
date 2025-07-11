@@ -1,25 +1,68 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Modal from "@/components/Modal";
-
-export function isLoggedInFromCookie(): boolean {
-    const cookie = document.cookie;
-    return cookie.includes("auth=true");
-}
+import { isLoggedInFromSession } from "@/utils/auth";
+import { logoutUser } from "@/services/auth";
 
 export default function Header() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [profileUrl, setProfileUrl] = useState("");
+    const [userName, setUserName] = useState("");
+    const [userMail, setUserMail] = useState("");
+    const navigate = useNavigate();
 
-    const userName = "김인하";
-    const userMail = "kiminha@kakao.com";
+    const BASE_GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/auth";
+    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const GOOGLE_REDIRECT_URL = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+
+    const GOOGLE_LOGIN_URL = `${BASE_GOOGLE_AUTH_URL}?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URL}&response_type=code&scope=openid%20email%20profile&access_type=offline&state=fairact`;
+
+    const BASE_KAKAO_AUTH_URL = "https://kauth.kakao.com/oauth/authorize";
+    const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
+    const KAKAO_REDIRECT_URL = import.meta.env.VITE_KAKAO_REDIRECT_URI;
+
+    const KAKAO_LOGIN_URL = `${BASE_KAKAO_AUTH_URL}?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URL}&response_type=code`;
 
     useEffect(() => {
-        setIsLoggedIn(isLoggedInFromCookie());
+        const handleStorageChange = () => {
+            const loggedIn = isLoggedInFromSession();
+            setIsLoggedIn(loggedIn);
+
+            if (loggedIn) {
+                const userInfoString = sessionStorage.getItem("userInfo");
+                if (userInfoString) {
+                    try {
+                        const userInfo = JSON.parse(userInfoString);
+                        setUserName(userInfo.name || userInfo.email || "");
+                        setUserMail(userInfo.email || "");
+                        setProfileUrl(userInfo.profile_uri || "");
+                    } catch {
+                        setUserName("");
+                        setUserMail("");
+                        setProfileUrl("");
+                    }
+                }
+            } else {
+                setUserName("");
+                setUserMail("");
+                setProfileUrl("");
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        window.addEventListener("session-update", handleStorageChange);
+
+        handleStorageChange();
+
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+            window.removeEventListener("session-update", handleStorageChange);
+        };
     }, []);
 
-    function handleCopyLink() {
+    const handleCopyLink = () => {
         const url = window.location.origin;
         navigator.clipboard
             .writeText(url)
@@ -29,12 +72,37 @@ export default function Header() {
             .catch(() => {
                 toast.error("복사에 실패했어요.");
             });
-    }
+    };
+
+    const handleGoogleLogin = () => {
+        window.location.href = GOOGLE_LOGIN_URL;
+    };
+
+    const handleKaKaoLogin = () => {
+        window.location.href = KAKAO_LOGIN_URL;
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logoutUser();
+            setIsLoggedIn(false);
+            setUserName("");
+            setUserMail("");
+            setProfileUrl("");
+            setIsModalOpen(false);
+            toast.success("성공적으로 로그아웃 되었습니다.");
+            navigate("/");
+        } catch {
+            toast.error("로그아웃 중 오류가 발생했습니다.");
+        }
+    };
 
     return (
         <>
             <header className="fixed top-0 left-0 w-full h-28 bg-white shadow z-50 flex items-center px-20 justify-between">
-                <div className="flex items-center gap-4">
+                <div
+                    className="flex items-center gap-4 cursor-pointer"
+                    onClick={() => navigate('/')}>
                     <img src="/logo.png" alt="logo" className="w-8 h-10" />
                     <h1 className="text-black text-4xl font-bold">Fairact</h1>
                 </div>
@@ -57,7 +125,7 @@ export default function Header() {
                         />
                     </div>
                 </div>
-            </header>
+            </header >
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <div className="fixed flex bg-sky-700 top-28 right-20 z-50 rounded-lg shadow-lg p-8 gap-4 w-100">
@@ -78,13 +146,13 @@ export default function Header() {
                                     <button
                                         type="button"
                                         className="w-30 h-10 text-sm font-bold bg-white text-sky-700 rounded-full flex items-center justify-center gap-2 px-4 cursor-pointer hover:bg-gray-200 transition"
+                                        onClick={handleLogout}
                                     >
                                         로그아웃
                                     </button>
                                 </div>
                                 <p className="truncate text-lg font-bold">{userMail}</p>
                             </div>
-
                         </>
                     ) : (
                         <>
@@ -95,6 +163,7 @@ export default function Header() {
                                 <button
                                     type="button"
                                     className="w-56 h-10 bg-white rounded-full flex items-center gap-2 px-4 cursor-pointer hover:bg-gray-100 transition"
+                                    onClick={handleGoogleLogin}
                                 >
                                     <img
                                         src="https://d1nuzc1w51n1es.cloudfront.net/d99d8628713bb69bd142.png"
@@ -108,13 +177,14 @@ export default function Header() {
                                 <button
                                     type="button"
                                     className="w-56 h-10 bg-[#FFE812] rounded-full flex items-center gap-2 px-4 cursor-pointer hover:bg-yellow-300 transition"
+                                    onClick={handleKaKaoLogin}
                                 >
                                     <img
                                         src="https://d1nuzc1w51n1es.cloudfront.net/c9b51919f15c93b05ae8.png"
                                         alt="KakaoTalk logo"
                                         className="w-8 h-8"
                                     />
-                                    <span className="font-semibold text-black text-base">카카오톡으로 시작하기</span>
+                                    <span className="font-semibold text-black text-base">카카오로 시작하기</span>
                                 </button>
                             </div>
                         </>

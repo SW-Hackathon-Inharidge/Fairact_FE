@@ -86,7 +86,6 @@ export default function Sidebar({
                             </button>
                         </div>
                     </div>
-
                 </Modal>
             )}
         </>

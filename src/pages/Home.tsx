@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { isLoggedInFromCookie } from "@/utils/auth";
+import { isLoggedInFromSession } from "@/utils/auth";
 import UnLoginContent from "@/components/UnLoginContent";
 import HomeContent from "@/components/HomeContent";
 import MyContent from "@/components/MyContent";
@@ -20,7 +20,7 @@ export default function Home() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        setIsLoggedIn(isLoggedInFromCookie());
+        setIsLoggedIn(isLoggedInFromSession());
     }, []);
 
     const renderContent = () => {
