@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from 'react-hot-toast';
 import Header from "@/components/Header";
 import Home from "@/pages/Home";
-import Contract from "@/pages/Contract";
+import ContractDetailPage from "@/pages/ContractDetailPage";
 import OAuthLogin from "@/components/OAuthLogin";
 
 export default function App() {
@@ -26,7 +26,7 @@ export default function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contract" element={<Contract />} />
+        <Route path="/contract/:id" element={<ContractDetailPage />} />
         <Route path="/login/oauth/kakao/callback" element={<OAuthLogin provider="kakao"/>} />
         <Route path="/login/oauth/google/callback" element={<OAuthLogin provider="google"/>} />
       </Routes>
