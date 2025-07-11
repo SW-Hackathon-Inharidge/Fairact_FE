@@ -1,16 +1,17 @@
-import axiosInstance from "@/services/axiosInstance";
+import { userAxiosInstance } from "@/services/axiosInstance";
+import useUserStore from "@/stores/useUserStore";
 
 export async function sendOAuthCode(provider: "google" | "kakao", code: string) {
     try {
-        const response = await axiosInstance.post(`/user/oauth/${provider}?code=${code}`);
+        const response = await userAxiosInstance.post(`/user/oauth/${provider}?code=${code}`);
 
         const { access_token, refresh_token } = response.data.token;
         const userInfo = response.data.userInfo;
-        console.log(response.data);
 
         sessionStorage.setItem("access_token", access_token);
         sessionStorage.setItem("refresh_token", refresh_token);
-        sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+        const { setUserInfo } = useUserStore.getState();
+        setUserInfo(userInfo);
 
         return response.data;
     } catch (err) {
@@ -29,14 +30,15 @@ export async function logoutUser() {
     }
 
     try {
-        const response = await axiosInstance.post('/user/logout', {
+        const response = await userAxiosInstance.post('/user/logout', {
             access_token,
             refresh_token,
         });
 
         sessionStorage.removeItem("access_token");
         sessionStorage.removeItem("refresh_token");
-        sessionStorage.removeItem("userInfo");
+        const { clearUserInfo } = useUserStore.getState();
+        clearUserInfo();
 
         return response.data;
     } catch (err) {

@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Modal from "@/components/Modal";
-import { isLoggedInFromSession } from "@/utils/auth";
 import { logoutUser } from "@/services/auth";
+import useUserStore from "@/stores/useUserStore";
+import shareIcon from "@/assets/icon/share.png";
+import userIcon from "@/assets/icon/user.png";
 
 export default function Header() {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [profileUrl, setProfileUrl] = useState("");
-    const [userName, setUserName] = useState("");
-    const [userMail, setUserMail] = useState("");
     const navigate = useNavigate();
+    const { userInfo } = useUserStore();
 
     const BASE_GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/auth";
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -24,43 +23,6 @@ export default function Header() {
     const KAKAO_REDIRECT_URL = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 
     const KAKAO_LOGIN_URL = `${BASE_KAKAO_AUTH_URL}?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URL}&response_type=code`;
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            const loggedIn = isLoggedInFromSession();
-            setIsLoggedIn(loggedIn);
-
-            if (loggedIn) {
-                const userInfoString = sessionStorage.getItem("userInfo");
-                if (userInfoString) {
-                    try {
-                        const userInfo = JSON.parse(userInfoString);
-                        setUserName(userInfo.name || userInfo.email || "");
-                        setUserMail(userInfo.email || "");
-                        setProfileUrl(userInfo.profile_uri || "");
-                    } catch {
-                        setUserName("");
-                        setUserMail("");
-                        setProfileUrl("");
-                    }
-                }
-            } else {
-                setUserName("");
-                setUserMail("");
-                setProfileUrl("");
-            }
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-        window.addEventListener("session-update", handleStorageChange);
-
-        handleStorageChange();
-
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-            window.removeEventListener("session-update", handleStorageChange);
-        };
-    }, []);
 
     const handleCopyLink = () => {
         const url = window.location.origin;
@@ -85,10 +47,6 @@ export default function Header() {
     const handleLogout = async () => {
         try {
             await logoutUser();
-            setIsLoggedIn(false);
-            setUserName("");
-            setUserMail("");
-            setProfileUrl("");
             setIsModalOpen(false);
             toast.success("성공적으로 로그아웃 되었습니다.");
             navigate("/");
@@ -111,7 +69,7 @@ export default function Header() {
                         className="w-12 h-12 px-3 py-2 bg-white rounded-2xl outline outline-2 outline-offset-[-2px] outline-neutral-400 flex justify-center items-center cursor-pointer hover:bg-gray-100"
                         onClick={handleCopyLink}
                     >
-                        <img src="./src/assets/icon/share.png" alt="공유" className="w-6 h-6" />
+                        <img src={shareIcon} alt="공유" className="w-6 h-6" />
                     </div>
 
                     <div
@@ -119,7 +77,7 @@ export default function Header() {
                         onClick={() => setIsModalOpen(true)}
                     >
                         <img
-                            src={isLoggedIn && profileUrl ? profileUrl : "./src/assets/icon/user.png"}
+                            src={userInfo && userInfo.profile_uri ? userInfo.profile_uri : userIcon}
                             alt="프로필"
                             className="w-7 h-7 object-cover"
                         />
@@ -129,10 +87,10 @@ export default function Header() {
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 <div className="fixed flex bg-sky-700 top-28 right-20 z-50 rounded-lg shadow-lg p-8 gap-4 w-100">
-                    {isLoggedIn ? (
+                    {userInfo ? (
                         <>
                             <img
-                                src={profileUrl}
+                                src={userInfo.profile_uri}
                                 alt="프로필"
                                 className="w-24 h-24 rounded-full object-cover"
                             />
@@ -140,7 +98,7 @@ export default function Header() {
                             <div className="flex flex-col gap-3 text-white">
                                 <div className="flex items-center justify-between">
                                     <div className="inline-flex items-baseline gap-1">
-                                        <p className="text-2xl font-bold m-0 p-0">{userName}</p>
+                                        <p className="text-2xl font-bold m-0 p-0">{userInfo.name}</p>
                                         <p className="text-lg m-0 p-0">님</p>
                                     </div>
                                     <button
@@ -151,7 +109,7 @@ export default function Header() {
                                         로그아웃
                                     </button>
                                 </div>
-                                <p className="truncate text-lg font-bold">{userMail}</p>
+                                <p className="truncate text-lg font-bold">{userInfo.email}</p>
                             </div>
                         </>
                     ) : (
