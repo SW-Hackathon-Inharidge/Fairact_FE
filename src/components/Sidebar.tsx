@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "@/components/Modal";
+import { createContract, UploadContractResponse } from "@/services/contract";
 
 type SidebarProps = {
     categories: { key: string; label: string }[];
@@ -13,8 +15,39 @@ export default function Sidebar({
     onSelectCategory,
 }: SidebarProps) {
     const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const openFileModal = () => setIsFileModalOpen(true);
+
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        setSelectedFile(file);
+        setError(null);
+    };
+
+    const handleUpload = async () => {
+        if (!selectedFile) {
+            setError("파일을 선택해주세요.");
+            return;
+        }
+        setIsUploading(true);
+        setError(null);
+        try {
+            const uploadResult: UploadContractResponse = await createContract(selectedFile);
+
+            setIsFileModalOpen(false);
+            setSelectedFile(null);
+
+            navigate(`/contract/${uploadResult.id}`, { state: { contract: uploadResult } });
+        } catch (err) {
+            setError("업로드 실패했습니다.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     return (
         <>
@@ -61,33 +94,57 @@ export default function Sidebar({
 
                         {/* 설명 텍스트 */}
                         <p className="text-lg text-neutral-400 font-['Inter'] leading-loose mb-4 max-w-xl mx-auto text-center">
-                            압축 형식(zip)파일을 제외한 모든 유형의 파일을 등록할 수 있습니다.<br />
+                            pdf 형식의 파일을 등록할 수 있습니다.
+                            <br />
                             파일 1개당 크기는 20MB를 초과할 수 없으며, 최대 10개까지 등록할 수 있습니다.
                         </p>
 
-                        {/* 드래그 앤 드롭 박스 */}
-                        <div className="bg-zinc-300 rounded-3xl max-w-[767px] w-full h-36 mx-auto flex flex-col items-center justify-center relative mb-8 px-6">
-                            <p className="text-lg text-neutral-400 font-['Inter'] leading-loose text-center mb-4">
-                                첨부 파일을 여기에 끌어다 놓거나, 파일 선택 버튼을 눌러 파일을 직접 선택해주세요.
-                            </p>
+                        <div className="bg-zinc-300 rounded-3xl max-w-[767px] w-full h-36 mx-auto flex flex-col items-center justify-center relative mb-8 px-6 overflow-hidden">
+                            {!selectedFile ? (
+                                <p className="text-lg text-neutral-400 font-['Inter'] leading-loose text-center mb-4">
+                                    파일 선택 버튼을 눌러 파일을 직접 선택해주세요.
+                                </p>
+                            ) : (
+                                <p className="text-lg font-['Inter'] leading-loose text-center mb-4">
+                                    {selectedFile.name}
+                                </p>
+                            )}
 
-                            {/* 파일 선택 버튼 */}
-                            <button className="bg-sky-700 rounded-2xl inline-flex items-center gap-2.5 px-6 py-2 text-white text-lg font-normal font-['Inter'] leading-9 hover:bg-sky-800 transition">
+                            <input
+                                id="fileInput"
+                                type="file"
+                                accept="application/pdf"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+
+                            <label
+                                htmlFor="fileInput"
+                                className="bg-sky-700 rounded-2xl inline-flex items-center gap-2.5 px-6 py-2 text-white text-lg font-normal font-['Inter'] leading-9 cursor-pointer hover:bg-sky-800 transition"
+                            >
                                 <img src="./src/assets/icon/white-upload.png" alt="파일 선택" className="w-6 h-6" />
                                 파일 선택
-                            </button>
+                            </label>
+
                         </div>
 
-                        {/* 하단 버튼 */}
+                        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+
                         <div className="flex justify-center max-w-[767px] w-full mx-auto">
-                            <button className="bg-blue-500 rounded-2xl flex items-center gap-2.5 px-6 py-2.5 text-white text-2xl font-bold font-['Inter'] leading-9 hover:bg-blue-600 transition">
-                                <span>다음</span>
-                                <img src="./src/assets/icon/right.png" alt="다음" className="w-6 h-6"></img>
+                            <button
+                                disabled={isUploading || !selectedFile}
+                                onClick={handleUpload}
+                                className={`bg-blue-500 rounded-2xl flex items-center gap-2.5 px-6 py-2.5 text-white text-2xl font-bold font-['Inter'] leading-9 hover:bg-blue-600 transition ${(isUploading || !selectedFile) ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                            >
+                                <span>{isUploading ? "업로드 중..." : "다음"}</span>
+                                <img src="./src/assets/icon/right.png" alt="다음" className="w-6 h-6" />
                             </button>
                         </div>
                     </div>
-                </Modal>
-            )}
+                </Modal >
+            )
+            }
         </>
     );
 }
