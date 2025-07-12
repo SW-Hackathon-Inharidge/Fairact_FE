@@ -422,12 +422,17 @@ export default function ContractDetailPage() {
 
                             await sendContractInviteEmail(contract.id, email, subject, html);
 
+                            const updatedContract = await fetchContractDetail(contract.id); 
+                            setContract(updatedContract);
+
                             toast.success("초대가 완료되었습니다.");
-                            setEmail("");
-                            setIsInviteModalOpen(false);
                         } catch (error) {
                             toast.error("초대에 실패했습니다.");
                             console.error(error);
+                        } finally {
+                            setEmail("");
+                            setIsInviteModalOpen(false);
+
                         }
                     }}
                 />

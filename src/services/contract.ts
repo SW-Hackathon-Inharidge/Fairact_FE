@@ -146,7 +146,6 @@ export async function sendContractInviteEmail(contractId: string, email: string,
             subject: subject,
             html_content: html,
         });
-        console.log("초대 이메일 전송 성공");
     } catch (error: any) {
         console.error(`초대 이메일 전송 실패 (contractId: ${contractId}):`, error);
         throw error;
