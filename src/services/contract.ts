@@ -121,7 +121,6 @@ export async function fetchContractDetail(contractId: string): Promise<UploadCon
     }
 }
 
-// 계약 디지털 서명 및 상태 업데이트
 export async function signContract(contractId: string, sign_x: number, sign_y: number, sign_page: number, pre_signed_sign_uri: string): Promise<UploadContractResponse> {
     try {
         const response = await contractAxiosInstance.patch<UploadContractResponse>(
@@ -140,19 +139,16 @@ export async function signContract(contractId: string, sign_x: number, sign_y: n
     }
 }
 
-// 이메일 초대 전송 함수
 export async function sendContractInviteEmail(contractId: string, email: string, subject: string, html: string): Promise<void> {
     try {
-        const payload = {
+        await contractAxiosInstance.post(`/contract/${contractId}/email`, {
             opponent_email: email,
             subject: subject,
             html_content: html,
-        };
-
-        await contractAxiosInstance.post(`/contract/${contractId}/email`, payload);
+        });
         console.log("초대 이메일 전송 성공");
     } catch (error: any) {
-        console.error(`계약서 재업로드 실패 (contractId: ${contractId}):`, error);
+        console.error(`초대 이메일 전송 실패 (contractId: ${contractId}):`, error);
         throw error;
     }
 }

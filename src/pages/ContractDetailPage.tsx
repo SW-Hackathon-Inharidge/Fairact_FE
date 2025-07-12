@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { toast, Toaster } from 'react-hot-toast';
 import { useNavigate, useParams } from "react-router-dom";
 import { EventSourcePolyfill } from 'event-source-polyfill';
-import { UploadContractResponse, fetchContractDetail, signContract } from "@/services/contract";
+import { UploadContractResponse, fetchContractDetail, sendContractInviteEmail, signContract } from "@/services/contract";
 import useUserStore from "@/stores/useUserStore";
 import ToxicClauseList from "@/components/ToxicClauseList";
 import PDFViewer from "@/components/PDFViewer";
@@ -15,6 +15,7 @@ import Plus from "@/assets/icon/plus.png";
 import { getContractState } from "@/utils/state";
 import Modal from "@/components/Modal";
 import { SignStepOne, SignStepThree, SignStepTwo } from "@/components/SignModal";
+import InviteModal from "@/components/InviteModal";
 
 interface ClickPosition {
     x: number;
@@ -27,6 +28,8 @@ export default function ContractDetailPage() {
     const [allChecked, setAllChecked] = useState(false);
     const [authStep, setAuthStep] = useState<1 | 2 | 3 | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [email, setEmail] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [signUrlList, setSignUrlList] = useState<string[]>([]);
     const [selectedSignUrl, setSelectedSignUrl] = useState<string | null>(null);
@@ -114,7 +117,7 @@ export default function ContractDetailPage() {
         sseDetailRef.current = eventSource;
 
         eventSource.addEventListener("keep-alive", (e) => {
-            console.log("🔥 keep-alive ping", e.data); 
+            console.log("🔥 keep-alive ping", e.data);
         });
 
         eventSource.addEventListener("contract-detail", (event) => {
@@ -152,7 +155,7 @@ export default function ContractDetailPage() {
         sseToxicRef.current = eventSource;
 
         eventSource.addEventListener("keep-alive", (e) => {
-            console.log("🔥 keep-alive ping", e.data); 
+            console.log("🔥 keep-alive ping", e.data);
         });
 
         eventSource.addEventListener("toxic-clause", (event) => {
@@ -341,7 +344,11 @@ export default function ContractDetailPage() {
 
                             <div className="flex flex-col items-center gap-4 pb-10">
                                 {showInviteButton && (
-                                    <button type="button" className="inline-flex w-52 items-center justify-center gap-2.5 rounded-2xl bg-sky-700 px-5 py-2 shadow">
+                                    <button
+                                        type="button"
+                                        className="inline-flex w-52 items-center justify-center gap-2.5 rounded-2xl bg-sky-700 px-5 py-2 shadow"
+                                        onClick={() => setIsInviteModalOpen(true)}
+                                    >
                                         <img src={Upload} alt="이메일로 초대" className="w-6 h-6" />
                                         <span className="text-2xl font-bold leading-9 text-white">이메일로 초대</span>
                                     </button>
@@ -385,6 +392,45 @@ export default function ContractDetailPage() {
                         />
                     )}
                 </Modal>
+
+                <InviteModal
+                    email={email}
+                    setEmail={setEmail}
+                    isOpen={isInviteModalOpen}
+                    onClose={() => setIsInviteModalOpen(false)}
+                    handleInvite={async () => {
+                        if (!email) {
+                            toast.error("이메일을 입력해주세요.");
+                            return;
+                        }
+
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                        if (!emailRegex.test(email)) {
+                            toast.error("올바른 이메일 형식을 입력해주세요.");
+                            return;
+                        }
+
+                        if (!contract?.id) {
+                            toast.error("계약 정보가 없습니다.");
+                            return;
+                        }
+
+                        try {
+                            const subject = "전자 서명 초대 메일입니다.";
+                            const html = `<p>${email} 님을 전자 서명에 초대합니다.</p>`;
+
+                            await sendContractInviteEmail(contract.id, email, subject, html);
+
+                            toast.success("초대가 완료되었습니다.");
+                            setEmail("");
+                            setIsInviteModalOpen(false);
+                        } catch (error) {
+                            toast.error("초대에 실패했습니다.");
+                            console.error(error);
+                        }
+                    }}
+                />
             </div>
         </>
     );
