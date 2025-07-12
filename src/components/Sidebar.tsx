@@ -2,6 +2,7 @@ import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/components/Modal";
 import { createContract, UploadContractResponse } from "@/services/contract";
+import useUserStore from "@/stores/useUserStore";
 
 type SidebarProps = {
     categories: { key: string; label: string }[];
@@ -19,6 +20,7 @@ export default function Sidebar({
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { userInfo } = useUserStore();
 
     const openFileModal = () => setIsFileModalOpen(true);
 
@@ -51,16 +53,24 @@ export default function Sidebar({
 
     return (
         <>
-            <aside className="w-80 bg-blue-500 flex-shrink-0 pt-28 px-6">
+            <aside className="w-1/5 bg-blue-500 flex-shrink-0 pt-28 px-6">
                 <div
-                    className="mt-10 w-[90%] px-5 py-3 bg-white rounded-2xl flex justify-center items-center gap-2.5 mb-6 mx-auto cursor-pointer"
-                    onClick={openFileModal}
+                    className={`mt-10 w-[90%] px-5 py-3 rounded-2xl flex justify-center items-center gap-2.5 mb-6 mx-auto
+    ${userInfo ? "bg-white cursor-pointer" : "bg-gray-200 cursor-not-allowed"}`}
+                    onClick={userInfo ? openFileModal : undefined}
                     role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && openFileModal()}
+                    tabIndex={userInfo ? 0 : -1}
+                    aria-disabled={!userInfo}
+                    onKeyDown={(e) => userInfo && e.key === "Enter" && openFileModal()}
                 >
-                    <img src="./src/assets/icon/upload.png" className="w-6 h-6" />
-                    <div className="text-sky-700 text-2xl font-bold">파일 업로드</div>
+                    <img
+                        src="./src/assets/icon/upload.png"
+                        className={userInfo ? "w-6 h-6" : "w-6 h-6 opacity-50"}
+                        alt="업로드 아이콘"
+                    />
+                    <div className={`${userInfo ? "text-sky-700" : "text-gray-400"} text-2xl font-bold`}>
+                        파일 업로드
+                    </div>
                 </div>
 
                 <div className="ml-5 mt-10 py-2 text-white text-xl font-normal leading-loose">계약</div>

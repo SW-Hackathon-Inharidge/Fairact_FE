@@ -25,7 +25,7 @@ export default function Header() {
     const KAKAO_LOGIN_URL = `${BASE_KAKAO_AUTH_URL}?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URL}&response_type=code`;
 
     const handleCopyLink = () => {
-        const url = window.location.origin;
+        const url = window.location.href;
         navigator.clipboard
             .writeText(url)
             .then(() => {

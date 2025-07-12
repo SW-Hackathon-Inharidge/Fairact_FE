@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { isLoggedInFromSession } from "@/utils/auth";
 import UnLoginContent from "@/components/UnLoginContent";
 import HomeContent from "@/components/HomeContent";
 import MyContent from "@/components/MyContent";
 import ListContent from "@/components/ListContent";
+import useUserStore from "@/stores/useUserStore";
 
 const categories = [
     { key: "home", label: "서명 요약" },
@@ -17,14 +17,10 @@ const categories = [
 
 export default function Home() {
     const [selectedCategory, setSelectedCategory] = useState("home");
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    useEffect(() => {
-        setIsLoggedIn(isLoggedInFromSession());
-    }, []);
+    const { userInfo } = useUserStore();
 
     const renderContent = () => {
-        if (!isLoggedIn) {
+        if (!userInfo) {
             return <UnLoginContent />;
         }
 
@@ -49,8 +45,8 @@ export default function Home() {
             <main className="flex-1 flex flex-col overflow-y-auto pt-32 px-10">
                 {categories.map(({ key, label }) => (
                     selectedCategory === key && (
-                        <div key={key} className="space-y-4">
-                            {isLoggedIn ? (
+                        <div key={key} className="space-y-4 item-center">
+                            {userInfo ? (
                                 renderContent()
                             ) : (
                                 <UnLoginContent />

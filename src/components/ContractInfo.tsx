@@ -8,7 +8,9 @@ export default function ContractInfo({ title, owner, worker }: ContractInfoProps
     return (
         <div className="flex flex-col flex-grow min-w-0 gap-1">
             <p className="font-bold text-xl truncate">{title}</p>
-            <p className="text-blue-500 text-lg">{owner + ", " + worker}</p>
+            <p className="text-blue-500 text-lg">
+                {worker ? `${owner}, ${worker}` : owner}
+            </p>
         </div>
     );
 }

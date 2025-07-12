@@ -37,12 +37,43 @@ export async function logoutUser() {
 
         sessionStorage.removeItem("access_token");
         sessionStorage.removeItem("refresh_token");
-        const { clearUserInfo } = useUserStore.getState();
-        clearUserInfo();
+        sessionStorage.removeItem("recentContractIds");
+
+        useUserStore.getState().clearUserInfo();
+
+        sessionStorage.removeItem("user-session");
 
         return response.data;
     } catch (err) {
         console.error("로그아웃 요청 실패:", err);
+        throw err;
+    }
+}
+
+export async function fetchUserSign() {
+    try {
+        const response = await userAxiosInstance.get('/user/sign');
+        return response.data;
+    } catch (err) {
+        console.error("로그아웃 요청 실패:", err);
+        throw err;
+    }
+}
+
+export async function uploadUserSign(file: File) {
+    try {
+        const formData = new FormData();
+        formData.append("sign", file);
+
+        const response = await userAxiosInstance.post("/user/sign/upload", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return response.data;
+    } catch (err) {
+        console.error("서명 업로드 실패:", err);
         throw err;
     }
 }
