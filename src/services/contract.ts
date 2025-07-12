@@ -1,5 +1,4 @@
 import { contractAxiosInstance } from "@/services/axiosInstance";
-
 export interface ContractSummaryDTO {
     id: string;
     title: string;
@@ -30,7 +29,10 @@ export interface UploadContractResponse {
     id: string;
     title: string;
     owner_id: number;
+    owner_name: string;
     worker_id: number;
+    worker_email: string;
+    worker_name: string;
     is_owner_signed: boolean;
     is_worker_signed: boolean;
     is_invite_accepted: boolean;
@@ -39,17 +41,29 @@ export interface UploadContractResponse {
     file_processed: boolean;
     worker_sign_x: number;
     worker_sign_y: number;
+    worker_sign_url: string;
+    worker_sign_page: number;
     worker_sign_scale: number;
     owner_sign_x: number;
     owner_sign_y: number;
+    owner_sign_page: number;
+    owner_sign_url: string;
     owner_sign_scale: number;
     clauses: Clause[];
+    created_at: number;
+    modified_at: number;
 }
 
-// 최근 열람 계약 3건 조회
 export async function fetchRecentContracts(): Promise<ContractSummaryDTO[]> {
+    const storageKey = "recentContractIds";
+    const contractIdList = JSON.parse(sessionStorage.getItem(storageKey) || "[]") as string[];
+
+    if (contractIdList.length === 0) return [];
+
     try {
-        const response = await contractAxiosInstance.get<ContractSummaryDTO[]>("/contract/list/recent");
+        const response = await contractAxiosInstance.post<ContractSummaryDTO[]>("/contract/list/recent", {
+            contractIdList,
+        });
         return response.data;
     } catch (error) {
         console.error("최근 계약 3건 조회 실패:", error);
@@ -57,7 +71,6 @@ export async function fetchRecentContracts(): Promise<ContractSummaryDTO[]> {
     }
 }
 
-// 내 서명 필요 계약 3건 조회
 export async function fetchContractsRequiringMySign(): Promise<ContractSummaryDTO[]> {
     try {
         const response = await contractAxiosInstance.get<ContractSummaryDTO[]>("/contract/list/require/me");
@@ -68,7 +81,6 @@ export async function fetchContractsRequiringMySign(): Promise<ContractSummaryDT
     }
 }
 
-// 상대방 서명 필요 계약 3건 조회
 export async function fetchContractsRequiringOpponentSign(): Promise<ContractSummaryDTO[]> {
     try {
         const response = await contractAxiosInstance.get<ContractSummaryDTO[]>("/contract/list/require/opponent");
@@ -79,7 +91,6 @@ export async function fetchContractsRequiringOpponentSign(): Promise<ContractSum
     }
 }
 
-// 계약서 업로드 및 계약 생성
 export async function createContract(file: File): Promise<UploadContractResponse> {
     try {
         const formData = new FormData();
@@ -98,24 +109,33 @@ export async function createContract(file: File): Promise<UploadContractResponse
     }
 }
 
-export async function reuploadContract(contractId: string, file: File): Promise<UploadContractResponse> {
+export async function fetchContractDetail(contractId: string): Promise<UploadContractResponse> {
     try {
-        const formData = new FormData();
-        formData.append("contract_file", file);
-
-        const response = await contractAxiosInstance.patch<UploadContractResponse>(
-            `/contract/${contractId}/file/reupload/`,
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            }
+        const response = await contractAxiosInstance.get<UploadContractResponse>(
+            `/contract/${contractId}/detail`
         );
-
         return response.data;
     } catch (error) {
-        console.error(`계약서 재업로드 실패 (contractId: ${contractId}):`, error);
+        console.error(`계약 상세 조회 실패 (contractId: ${contractId}):`, error);
+        throw error;
+    }
+}
+
+// 계약 디지털 서명 및 상태 업데이트
+export async function signContract(contractId: string, sign_x: number, sign_y: number, sign_page: number, pre_signed_sign_uri: string): Promise<UploadContractResponse> {
+    try {
+        const response = await contractAxiosInstance.patch<UploadContractResponse>(
+            `/contract/${contractId}/sign`,
+            {
+                sign_x,
+                sign_y,
+                sign_page,
+                pre_signed_sign_uri
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("서명 요청 실패:", error);
         throw error;
     }
 }
@@ -137,6 +157,7 @@ export async function sendContractInviteEmail(contractId: string, email: string,
     }
 }
 
+// 계약 초대 이메일 수락 및 계약 상태 업데이트
 export async function acceptContractInvite(contractId: string): Promise<UploadContractResponse> {
     try {
         const response = await contractAxiosInstance.patch<UploadContractResponse>(
@@ -149,18 +170,25 @@ export async function acceptContractInvite(contractId: string): Promise<UploadCo
     }
 }
 
-export async function signContract(contractId: string, sign_x: number, sign_y: number): Promise<UploadContractResponse> {
+// 계약서 재업로드
+export async function reuploadContract(contractId: string, file: File): Promise<UploadContractResponse> {
     try {
+        const formData = new FormData();
+        formData.append("contract_file", file);
+
         const response = await contractAxiosInstance.patch<UploadContractResponse>(
-            `/contract/${contractId}/sign`,
+            `/contract/${contractId}/file/reupload/`,
+            formData,
             {
-                sign_x,
-                sign_y,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
             }
         );
+
         return response.data;
     } catch (error) {
-        console.error("서명 요청 실패:", error);
+        console.error(`계약서 재업로드 실패 (contractId: ${contractId}):`, error);
         throw error;
     }
 }
