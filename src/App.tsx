@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import Home from "@/pages/Home";
 import ContractDetailPage from "@/pages/ContractDetailPage";
 import OAuthLogin from "@/components/OAuthLogin";
+import RequireAuth from "./components/RequireAuth";
+import LoginPage from "./pages/LoginPage";
 
 export default function App() {
   return (
@@ -26,9 +28,17 @@ export default function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contract/:id" element={<ContractDetailPage />} />
-        <Route path="/login/oauth/kakao/callback" element={<OAuthLogin provider="kakao"/>} />
-        <Route path="/login/oauth/google/callback" element={<OAuthLogin provider="google"/>} />
+        <Route
+          path="/contract/:id"
+          element={
+            <RequireAuth>
+              <ContractDetailPage />
+            </RequireAuth>
+          }
+        />
+        <Route path="/login/oauth/kakao/callback" element={<OAuthLogin provider="kakao" />} />
+        <Route path="/login/oauth/google/callback" element={<OAuthLogin provider="google" />} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </Router>
   );

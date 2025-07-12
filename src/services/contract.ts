@@ -152,7 +152,6 @@ export async function sendContractInviteEmail(contractId: string, email: string,
     }
 }
 
-// 계약 초대 이메일 수락 및 계약 상태 업데이트
 export async function acceptContractInvite(contractId: string): Promise<UploadContractResponse> {
     try {
         const response = await contractAxiosInstance.patch<UploadContractResponse>(

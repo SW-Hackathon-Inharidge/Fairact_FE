@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { toast, Toaster } from 'react-hot-toast';
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { EventSourcePolyfill } from 'event-source-polyfill';
-import { UploadContractResponse, fetchContractDetail, sendContractInviteEmail, signContract } from "@/services/contract";
+import { UploadContractResponse, acceptContractInvite, fetchContractDetail, sendContractInviteEmail, signContract } from "@/services/contract";
 import useUserStore from "@/stores/useUserStore";
 import ToxicClauseList from "@/components/ToxicClauseList";
 import PDFViewer from "@/components/PDFViewer";
@@ -16,6 +16,7 @@ import { getContractState } from "@/utils/state";
 import Modal from "@/components/Modal";
 import { SignStepOne, SignStepThree, SignStepTwo } from "@/components/SignModal";
 import InviteModal from "@/components/InviteModal";
+import { emailTemplate } from "@/utils/emailTemplate";
 
 interface ClickPosition {
     x: number;
@@ -43,7 +44,9 @@ export default function ContractDetailPage() {
     const navigate = useNavigate();
     const user = useUserStore((state) => state.userInfo);
 
-    console.log(contract);
+    const [searchParams] = useSearchParams();
+    const invited = searchParams.get("invited") === "true";
+
     const scale = 10000;
 
     const ownerSignPosition = useMemo(() => {
@@ -67,6 +70,17 @@ export default function ContractDetailPage() {
     }, [contract]);
 
     useEffect(() => {
+        if (invited && contract?.id && !contract.is_invite_accepted) {
+            acceptContractInvite(contract.id)
+                .then((updated) => setContract(updated))
+                .catch((err) => {
+                    toast.error("초대 수락 실패");
+                    console.error(err);
+                });
+        }
+    }, [invited, contract?.id]);
+
+    useEffect(() => {
         if (!contract && id && !fetchContractDetailRef.current) {
             fetchContractDetailRef.current = true;
             fetchContractDetail(id)
@@ -81,7 +95,11 @@ export default function ContractDetailPage() {
     // access check
     useEffect(() => {
         if (!contract || !user) return;
-        const isValidAccess = user.user_id === contract.owner_id || user.user_id === contract.worker_id;
+        const isValidAccess = user.user_id === contract.owner_id || user.user_id === contract.worker_id || user.email === contract.worker_email;
+        if (invited && !isValidAccess) {
+            alert("초대받은 이메일과 로그인한 이메일이 다릅니다. 해당 이메일로 다시 로그인해주세요.");
+            navigate("/", { replace: true });
+        }
         if (!isValidAccess) {
             toast.error("해당 계약서에 접근할 수 없습니다.");
             navigate("/", { replace: true });
@@ -116,14 +134,11 @@ export default function ContractDetailPage() {
 
         sseDetailRef.current = eventSource;
 
-        eventSource.addEventListener("keep-alive", (e) => {
-            console.log("🔥 keep-alive ping", e.data);
-        });
+        eventSource.addEventListener("keep-alive", (e) => {});
 
         eventSource.addEventListener("contract-detail", (event) => {
             try {
                 const updatedContract: UploadContractResponse = JSON.parse(event.data);
-                console.log("sse update!!");
                 setContract(updatedContract);
             } catch (e) {
                 console.error("SSE 계약 상세 파싱 실패", e);
@@ -154,9 +169,7 @@ export default function ContractDetailPage() {
 
         sseToxicRef.current = eventSource;
 
-        eventSource.addEventListener("keep-alive", (e) => {
-            console.log("🔥 keep-alive ping", e.data);
-        });
+        eventSource.addEventListener("keep-alive", (e) => {});
 
         eventSource.addEventListener("toxic-clause", (event) => {
             try {
@@ -164,7 +177,6 @@ export default function ContractDetailPage() {
                 setContract((prev) =>
                     prev ? { ...prev, clauses: updatedClauses } : prev
                 );
-                console.log("독소조항 sse!");
             } catch (e) {
                 console.error("SSE 독소조항 파싱 실패", e);
             }
@@ -417,12 +429,14 @@ export default function ContractDetailPage() {
                         }
 
                         try {
-                            const subject = "전자 서명 초대 메일입니다.";
-                            const html = `<p>${email} 님을 전자 서명에 초대합니다.</p>`;
+                            const subject = "[FairAct] 전자 서명을 위한 계약에 초대되었습니다.";
 
-                            await sendContractInviteEmail(contract.id, email, subject, html);
+                            const inviteUrl = `${window.location.origin}/contract/${contract.id}?invited=true`;
+                            const finalHtml = emailTemplate.replace("{{inviteUrl}}", inviteUrl);
 
-                            const updatedContract = await fetchContractDetail(contract.id); 
+                            await sendContractInviteEmail(contract.id, email, subject, finalHtml);
+
+                            const updatedContract = await fetchContractDetail(contract.id);
                             setContract(updatedContract);
 
                             toast.success("초대가 완료되었습니다.");
