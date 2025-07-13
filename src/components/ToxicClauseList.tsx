@@ -1,5 +1,5 @@
 import ToxicClause from "@/components/ToxicClause";
-import { Clauses, UploadContractResponse } from "@/services/contract";
+import { UploadContractResponse } from "@/services/contract";
 import { useEffect, useState } from "react";
 
 interface ToxicClauseListProps {
@@ -44,7 +44,7 @@ export default function ToxicClauseList({ contract, onAllChecked, isSigned }: To
                 {safeClauses.map((clause, index) => (
                     <ToxicClause
                         key={index}
-                        text={clause.clause.text}
+                        // text={clause.clause.text}
                         reason={clause.reason}
                         suggestion={clause.suggestion}
                         confirmText="아래 내용을 확인하고 이해했습니다"

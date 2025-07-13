@@ -1,5 +1,5 @@
 type ToxicClauseProps = {
-  text: string;
+  // text: string;
   reason: string;
   suggestion: string;
   confirmText: string;
@@ -9,7 +9,7 @@ type ToxicClauseProps = {
 };
 
 export default function ToxicClause({
-  text,
+  // text,
   reason,
   suggestion,
   confirmText,
@@ -21,7 +21,7 @@ export default function ToxicClause({
     <div className="w-full max-w-xs inline-flex flex-col justify-start items-start gap-3 px-4">
       <div className="self-stretch px-5 py-6 bg-white rounded-2xl outline outline-2 outline-offset-[-2px] outline-neutral-400 flex flex-col justify-start items-start gap-3 min-h-[120px]">
         <div className="self-stretch text-black text-lg font-bold font-inter leading-loose truncate">
-          {text}
+          {/* {text} */}
         </div>
         <div className="self-stretch text-blue-600 text-lg font-normal font-inter leading-loose">
           {reason}

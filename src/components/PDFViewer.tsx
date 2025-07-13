@@ -44,6 +44,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
         const loadPdf = async () => {
             const loadingTask = pdfjsLib.getDocument(contract.file_uri);
+
             const loadedPdfDoc = await loadingTask.promise;
             setPdfDoc(loadedPdfDoc);
 
@@ -135,6 +136,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                         }}
                     />
 
+                    {contract.clauses !== null && (
+                        <div className="">
+
+                        </div>
+                    )}
+
                     {/* markerPosition 마커 */}
                     {markerPosition && markerPosition.page === pageNum && (
                         <div
@@ -151,6 +158,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                             }}
                         />
                     )}
+
                     {ownerSignPosition && ownerSignPosition.page === pageNum && contract.owner_sign_url && (
                         <img
                             src={contract.owner_sign_url}
