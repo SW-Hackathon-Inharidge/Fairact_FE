@@ -7,7 +7,12 @@ export default function StatusIndicator({ status, iconSrc }: StatusIndicatorProp
     return (
         <div className="flex flex-row items-center gap-2 min-w-fit">
             <img src={iconSrc} className="w-5 h-5" />
-            <p className="text-blue-500 text-lg font-bold">{status}</p>
+            <p
+                className={`text-lg font-bold ${status === "완료" ? "text-[#FF8A1C] px-2" : "text-blue-500"
+                    }`}
+            >
+                {status}
+            </p>
         </div>
     );
 }
