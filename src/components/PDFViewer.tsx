@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 import PdfWorker from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker";
+import { UploadContractResponse } from "@/services/contract";
 
 (pdfjsLib.GlobalWorkerOptions as any).workerPort = new PdfWorker();
 
@@ -8,13 +9,11 @@ import PdfWorker from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker";
 type PositionWithPage = { x: number; y: number; page: number };
 
 type PDFViewerProps = {
-    fileUrl: string;
+    contract: UploadContractResponse
     markerPosition?: PositionWithPage | null;
     onPdfClick?: (x: number, y: number, pageNum: number) => void;
     ownerSignPosition?: PositionWithPage | null;
     workerSignPosition?: PositionWithPage | null;
-    ownerSignUrl?: string;
-    workerSignUrl?: string;
 };
 
 type PageData = {
@@ -28,13 +27,11 @@ type RenderTask = {
 };
 
 const PDFViewer: React.FC<PDFViewerProps> = ({
-    fileUrl,
+    contract,
     markerPosition,
     onPdfClick,
     ownerSignPosition,
     workerSignPosition,
-    ownerSignUrl,
-    workerSignUrl
 }) => {
     const [pdfDoc, setPdfDoc] = useState<any>(null);
     const [pages, setPages] = useState<PageData[]>([]);
@@ -43,10 +40,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
     // PDF 로드
     useEffect(() => {
-        if (!fileUrl) return;
+        if (!contract.file_uri) return;
 
         const loadPdf = async () => {
-            const loadingTask = pdfjsLib.getDocument(fileUrl);
+            const loadingTask = pdfjsLib.getDocument(contract.file_uri);
             const loadedPdfDoc = await loadingTask.promise;
             setPdfDoc(loadedPdfDoc);
 
@@ -64,7 +61,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
         return () => {
             renderTasks.current.forEach((task) => task?.cancel());
         };
-    }, [fileUrl]);
+    }, [contract.file_uri]);
 
     // 페이지 렌더링
     useEffect(() => {
@@ -154,9 +151,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                             }}
                         />
                     )}
-                    {ownerSignPosition && ownerSignPosition.page === pageNum && ownerSignUrl && (
+                    {ownerSignPosition && ownerSignPosition.page === pageNum && contract.owner_sign_url && (
                         <img
-                            src={ownerSignUrl}
+                            src={contract.owner_sign_url}
                             alt="Owner Signature"
                             style={{
                                 position: "absolute",
@@ -172,9 +169,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                     )}
 
                     {/* worker 서명 이미지 표시 */}
-                    {workerSignPosition && workerSignPosition.page === pageNum && workerSignUrl && (
+                    {workerSignPosition && workerSignPosition.page === pageNum && contract.worker_sign_url && (
                         <img
-                            src={workerSignUrl}
+                            src={contract.worker_sign_url}
                             alt="Worker Signature"
                             style={{
                                 position: "absolute",

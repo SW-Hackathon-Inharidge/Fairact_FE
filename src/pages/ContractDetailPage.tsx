@@ -18,6 +18,7 @@ import { SignStepOne, SignStepThree, SignStepTwo } from "@/components/SignModal"
 import InviteModal from "@/components/InviteModal";
 import { emailTemplate } from "@/utils/emailTemplate";
 import updateRecentContractIds from "@/utils/RecentContracts";
+import Loading from "@/components/Loading";
 
 interface ClickPosition {
     x: number;
@@ -42,6 +43,10 @@ export default function ContractDetailPage() {
     const fetchSignRef = useRef(false);
     const sseDetailRef = useRef<EventSource | null>(null);
     const sseToxicRef = useRef<EventSource | null>(null);
+    const memoizedSetAllChecked = useCallback((checked: boolean) => {
+        setAllChecked(checked);
+    }, []);
+
 
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -145,6 +150,7 @@ export default function ContractDetailPage() {
         eventSource.addEventListener("contract-detail", (event) => {
             try {
                 const updatedContract: UploadContractResponse = JSON.parse(event.data);
+                console.log(updatedContract);
                 setContract(updatedContract);
             } catch (e) {
                 console.error("SSE 계약 상세 파싱 실패", e);
@@ -179,10 +185,9 @@ export default function ContractDetailPage() {
 
         eventSource.addEventListener("toxic-clause", (event) => {
             try {
-                const updatedClauses = JSON.parse(event.data);
-                setContract((prev) =>
-                    prev ? { ...prev, clauses: updatedClauses } : prev
-                );
+                const updatedContract = JSON.parse(event.data);
+                console.log(updatedContract);
+                setContract(updatedContract);
             } catch (e) {
                 console.error("SSE 독소조항 파싱 실패", e);
             }
@@ -212,6 +217,11 @@ export default function ContractDetailPage() {
     }, []);
 
     const handleESignClick = () => {
+        if (!contract?.file_processed) {
+            toast.error("계약서를 분석하는 중입니다. 잠시만 기다려주세요.");
+            return;
+        }
+
         if (!selectedSignUrl) {
             toast.error("서명을 선택해주세요.");
             return;
@@ -281,108 +291,114 @@ export default function ContractDetailPage() {
                 }}
             />
             <div className="flex h-screen w-screen bg-zinc-100 overflow-hidden">
-                <ToxicClauseList title={contract.title} clauses={contract.clauses} onAllChecked={setAllChecked} isSigned={
+                <ToxicClauseList contract={contract} onAllChecked={memoizedSetAllChecked} isSigned={
                     (role === "worker" && contract.is_worker_signed) ||
                     (role === "owner" && contract.is_owner_signed)
                 } />
                 <main className="flex-1 flex flex-col pt-32 pl-24 overflow-hidden justify-between">
-                    <div className="flex h-full gap-24">
+                    <div className="flex h-full gap-16">
                         <div className="flex-1 overflow-y-auto" style={{ maxWidth: 850, maxHeight: "100%" }}>
                             <PDFViewer
-                                fileUrl={contract.file_uri}
+                                contract={contract}
                                 onPdfClick={isSigned ? undefined : handlePdfClick}
                                 markerPosition={isSigned ? undefined : clickPosition}
                                 ownerSignPosition={ownerSignPosition}
                                 workerSignPosition={workerSignPosition}
-                                ownerSignUrl={contract.owner_sign_url || undefined}
-                                workerSignUrl={contract.worker_sign_url || undefined}
                             />
                         </div>
 
-                        <div className="flex flex-col w-72 justify-between">
-                            <div className="flex flex-col items-center">
-                                <p className="text-blue-500 text-lg font-bold my-4 text-center">
-                                    {getContractState(
-                                        contract.worker_email,
-                                        contract.is_invite_accepted,
-                                        contract.is_owner_signed,
-                                        contract.is_worker_signed,
-                                        role
-                                    )}
-                                </p>
-                                {showSignButton && (
-                                    <div className="w-60 flex flex-col items-start mb-6">
-                                        <button
-                                            onClick={() => setIsOpen(prev => !prev)}
-                                            className="w-full h-12 pl-7 pr-6 py-2 bg-white rounded-2xl outline outline-2 outline-offset-[-2px] outline-neutral-400 flex justify-between items-center"
-                                        >
-                                            <div className="text-blue-500 text-xl font-semibold leading-loose">사인</div>
-                                            <img src={isOpen ? Up : Down} alt="toggle" className="w-6 h-6" />
-                                        </button>
+                        {!contract.file_processed ? (
+                            <div className="flex flex-col w-72 justify-between">
+                                <div className="flex flex-col w-72 justify-center items-center h-full">
+                                    <Loading phrase="독소조항 검사 중" />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col w-72 justify-between">
+                                <div className="flex flex-col items-center">
+                                    <p className="text-blue-500 text-lg font-bold my-4 text-center">
+                                        {getContractState(
+                                            contract.worker_email,
+                                            contract.is_invite_accepted,
+                                            contract.is_owner_signed,
+                                            contract.is_worker_signed,
+                                            role
+                                        )}
+                                    </p>
+                                    {showSignButton && (
+                                        <div className="w-60 flex flex-col items-start mb-6">
+                                            <button
+                                                onClick={() => setIsOpen(prev => !prev)}
+                                                className="w-full h-12 pl-7 pr-6 py-2 bg-white rounded-2xl outline outline-2 outline-offset-[-2px] outline-neutral-400 flex justify-between items-center"
+                                            >
+                                                <div className="text-blue-500 text-xl font-semibold leading-loose">사인</div>
+                                                <img src={isOpen ? Up : Down} alt="toggle" className="w-6 h-6" />
+                                            </button>
 
-                                        <div className={`transition-all duration-300 overflow-hidden ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"} w-full flex flex-col`}>
-                                            {signUrlList.map((signUrl, idx) => {
-                                                const isSelected = selectedSignUrl === signUrl;
-                                                const isFirst = idx === 0;
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        type="button"
-                                                        onClick={() => setSelectedSignUrl(signUrl)}
-                                                        className={`
+                                            <div className={`transition-all duration-300 overflow-hidden ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"} w-full flex flex-col`}>
+                                                {signUrlList.map((signUrl, idx) => {
+                                                    const isSelected = selectedSignUrl === signUrl;
+                                                    const isFirst = idx === 0;
+                                                    return (
+                                                        <button
+                                                            key={idx}
+                                                            type="button"
+                                                            onClick={() => setSelectedSignUrl(signUrl)}
+                                                            className={`
                                                             flex items-center gap-3 px-4 py-2 w-full h-16
                                                             ${isSelected ? "border-4 border-sky-600 bg-sky-50" : "border border-gray-300"}
                                                             ${isFirst ? "rounded-t-2xl" : ""}
                                                             hover:bg-sky-100 transition-all duration-200
                                                         `}
-                                                    >
-                                                        <img className="w-28 h-full object-contain" src={signUrl} alt="내 서명" />
-                                                        {isSelected && <span className="text-sky-600 font-bold ml-auto">✔</span>}
-                                                    </button>
-                                                );
-                                            })}
-                                            <label
-                                                htmlFor="sign-upload"
-                                                className="h-12 pl-7 pr-6 py-2 bg-white rounded-b-2xl shadow flex justify-between items-center w-full cursor-pointer border border-gray-300"
-                                            >
-                                                <span className="text-neutral-400 text-xl font-semibold leading-loose">추가하기</span>
-                                                <img src={Plus} alt="plus" className="w-6 h-6" />
-                                                <input
-                                                    id="sign-upload"
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleSignUpload}
-                                                    className="hidden"
-                                                />
-                                            </label>
+                                                        >
+                                                            <img className="w-28 h-full object-contain" src={signUrl} alt="내 서명" />
+                                                            {isSelected && <span className="text-sky-600 font-bold ml-auto">✔</span>}
+                                                        </button>
+                                                    );
+                                                })}
+                                                <label
+                                                    htmlFor="sign-upload"
+                                                    className="h-12 pl-7 pr-6 py-2 bg-white rounded-b-2xl shadow flex justify-between items-center w-full cursor-pointer border border-gray-300"
+                                                >
+                                                    <span className="text-neutral-400 text-xl font-semibold leading-loose">추가하기</span>
+                                                    <img src={Plus} alt="plus" className="w-6 h-6" />
+                                                    <input
+                                                        id="sign-upload"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={handleSignUpload}
+                                                        className="hidden"
+                                                    />
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
 
-                            <div className="flex flex-col items-center gap-4 pb-10">
-                                {showInviteButton && (
-                                    <button
-                                        type="button"
-                                        className="inline-flex w-52 items-center justify-center gap-2.5 rounded-2xl bg-sky-700 px-5 py-2 shadow"
-                                        onClick={() => setIsInviteModalOpen(true)}
-                                    >
-                                        <img src={Upload} alt="이메일로 초대" className="w-6 h-6" />
-                                        <span className="text-2xl font-bold leading-9 text-white">이메일로 초대</span>
-                                    </button>
-                                )}
-                                {showSignButton && (
-                                    <button
-                                        type="button"
-                                        onClick={handleESignClick}
-                                        className="inline-flex w-52 items-center justify-center gap-2.5 rounded-2xl bg-sky-700 px-5 py-2 shadow"
-                                    >
-                                        <img src={Check} alt="전자서명" className="w-6 h-6" />
-                                        <span className="text-2xl font-bold leading-9 text-white">전자서명</span>
-                                    </button>
-                                )}
+                                <div className="flex flex-col items-center gap-4 pb-10">
+                                    {showInviteButton && (
+                                        <button
+                                            type="button"
+                                            className="inline-flex w-52 items-center justify-center gap-2.5 rounded-2xl bg-sky-700 px-5 py-2 shadow"
+                                            onClick={() => setIsInviteModalOpen(true)}
+                                        >
+                                            <img src={Upload} alt="이메일로 초대" className="w-6 h-6" />
+                                            <span className="text-2xl font-bold leading-9 text-white">이메일로 초대</span>
+                                        </button>
+                                    )}
+                                    {showSignButton && (
+                                        <button
+                                            type="button"
+                                            onClick={handleESignClick}
+                                            className="inline-flex w-52 items-center justify-center gap-2.5 rounded-2xl bg-sky-700 px-5 py-2 shadow"
+                                        >
+                                            <img src={Check} alt="전자서명" className="w-6 h-6" />
+                                            <span className="text-2xl font-bold leading-9 text-white">전자서명</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </main>
 

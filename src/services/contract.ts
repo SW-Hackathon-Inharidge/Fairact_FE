@@ -10,19 +10,23 @@ export interface ContractSummaryDTO {
 }
 
 export interface SegmentPosition {
-    pageIndex: number;
+    page_index: number;
     vertices: { x: number; y: number }[];
 }
 
 export interface Clause {
     id: number;
     text: string;
-    segmentPositions: SegmentPosition[];
-    reasonType: string;
+    segment_positions: SegmentPosition[];
+}
+
+export interface Clauses {
+    clause: Clause;
+    reason_type: string;
     reason: string;
     suggestion: string;
-    checkedAt: number;
-    isChecked: boolean;
+    checked_at: number;
+    is_checked: boolean;
 }
 
 export interface UploadContractResponse {
@@ -49,7 +53,7 @@ export interface UploadContractResponse {
     owner_sign_page: number;
     owner_sign_url: string;
     owner_sign_scale: number;
-    clauses: Clause[];
+    clauses: Clauses[];
     created_at: number;
     modified_at: number;
 }

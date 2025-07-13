@@ -1,19 +1,23 @@
 import ToxicClause from "@/components/ToxicClause";
-import { Clause } from "@/services/contract";
+import { Clauses, UploadContractResponse } from "@/services/contract";
 import { useEffect, useState } from "react";
 
 interface ToxicClauseListProps {
-    title: string;
-    clauses: Clause[] | null;
+    contract: UploadContractResponse
     onAllChecked: (checked: boolean) => void;
     isSigned: boolean
 }
 
-export default function ToxicClauseList({ title, clauses, onAllChecked, isSigned }: ToxicClauseListProps) {
-    const safeClauses = clauses ?? [];
+export default function ToxicClauseList({ contract, onAllChecked, isSigned }: ToxicClauseListProps) {
+    const safeClauses = Array.isArray(contract.clauses) ? contract.clauses : [];
+
     const [checkedStates, setCheckedStates] = useState<boolean[]>(() =>
         Array(safeClauses.length).fill(false)
     );
+
+    useEffect(() => {
+        setCheckedStates(Array(safeClauses.length).fill(false));
+    }, [contract.clauses]);
 
     useEffect(() => {
         const allChecked = checkedStates.every((v) => v);
@@ -29,7 +33,7 @@ export default function ToxicClauseList({ title, clauses, onAllChecked, isSigned
     return (
         <aside className="w-1/5 bg-blue-500 flex-shrink-0 pt-28 px-8 flex flex-col items-center h-screen">
             <p className="text-white text-2xl font-bold pt-12 text-center truncate w-full max-w-full">
-                {title}
+                {contract.title}
             </p>
             <p className="text-white text-sm p-6">
                 독소조항 주의 항목은 미리 업로드 된 계약서 상의 조항을 살펴보고 주의를 주는 것이므로,
@@ -40,10 +44,11 @@ export default function ToxicClauseList({ title, clauses, onAllChecked, isSigned
                 {safeClauses.map((clause, index) => (
                     <ToxicClause
                         key={index}
+                        text={clause.clause.text}
                         reason={clause.reason}
-                        description={clause.suggestion}
+                        suggestion={clause.suggestion}
                         confirmText="아래 내용을 확인하고 이해했습니다"
-                        checked={checkedStates[index]}
+                        checked={checkedStates[index] ?? false}
                         onCheck={(checked) => handleCheckChange(index, checked)}
                         hideCheckbox={isSigned}
                     />
