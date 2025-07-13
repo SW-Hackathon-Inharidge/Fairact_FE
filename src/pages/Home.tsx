@@ -8,11 +8,11 @@ import useUserStore from "@/stores/useUserStore";
 
 const categories = [
     { key: "home", label: "서명 요약" },
-    { key: "myDocuments", label: "나의 문서" },
-    { key: "invitationPending", label: "초대 대기" },
-    { key: "mySignaturePending", label: "내 서명 대기" },
-    { key: "otherSignaturePending", label: "상대 서명 대기" },
-    { key: "completedContracts", label: "완료 계약" },
+    // { key: "myDocuments", label: "나의 문서" },
+    // { key: "invitationPending", label: "초대 대기" },
+    // { key: "mySignaturePending", label: "내 서명 대기" },
+    // { key: "otherSignaturePending", label: "상대 서명 대기" },
+    // { key: "completedContracts", label: "완료 계약" },
 ];
 
 export default function Home() {
