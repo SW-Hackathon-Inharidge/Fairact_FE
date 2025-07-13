@@ -17,6 +17,7 @@ import Modal from "@/components/Modal";
 import { SignStepOne, SignStepThree, SignStepTwo } from "@/components/SignModal";
 import InviteModal from "@/components/InviteModal";
 import { emailTemplate } from "@/utils/emailTemplate";
+import updateRecentContractIds from "@/utils/RecentContracts";
 
 interface ClickPosition {
     x: number;
@@ -30,6 +31,8 @@ export default function ContractDetailPage() {
     const [authStep, setAuthStep] = useState<1 | 2 | 3 | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isSigning, setIsSigning] = useState(false);
+    const [isInviting, setIsInviting] = useState(false);
     const [email, setEmail] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [signUrlList, setSignUrlList] = useState<string[]>([]);
@@ -84,7 +87,10 @@ export default function ContractDetailPage() {
         if (!contract && id && !fetchContractDetailRef.current) {
             fetchContractDetailRef.current = true;
             fetchContractDetail(id)
-                .then(setContract)
+                .then((data) => {
+                    setContract(data);
+                    updateRecentContractIds(data.id);
+                })
                 .catch(() => {
                     toast.error("계약 정보를 불러오지 못했습니다.");
                     navigate("/", { replace: true });
@@ -134,7 +140,7 @@ export default function ContractDetailPage() {
 
         sseDetailRef.current = eventSource;
 
-        eventSource.addEventListener("keep-alive", (e) => {});
+        eventSource.addEventListener("keep-alive", (e) => { });
 
         eventSource.addEventListener("contract-detail", (event) => {
             try {
@@ -169,7 +175,7 @@ export default function ContractDetailPage() {
 
         sseToxicRef.current = eventSource;
 
-        eventSource.addEventListener("keep-alive", (e) => {});
+        eventSource.addEventListener("keep-alive", (e) => { });
 
         eventSource.addEventListener("toxic-clause", (event) => {
             try {
@@ -385,10 +391,12 @@ export default function ContractDetailPage() {
                     {authStep === 2 && <SignStepTwo onNext={() => setAuthStep(3)} />}
                     {authStep === 3 && (
                         <SignStepThree
+                            isSigning={isSigning}
                             onConfirm={async () => {
                                 let res;
                                 try {
                                     if (!clickPosition || !contract?.id) return;
+                                    setIsSigning(true);
                                     const xInt = Math.round(clickPosition.x * scale);
                                     const yInt = Math.round(clickPosition.y * scale);
                                     res = await signContract(contract.id, xInt, yInt, clickPosition.page, selectedSignUrl);
@@ -398,6 +406,7 @@ export default function ContractDetailPage() {
                                 } finally {
                                     setAuthStep(null);
                                     setIsModalOpen(false);
+                                    setIsSigning(false);
                                     if (res) setContract(res);
                                 }
                             }}
@@ -407,6 +416,7 @@ export default function ContractDetailPage() {
 
                 <InviteModal
                     email={email}
+                    isInviting={isInviting}
                     setEmail={setEmail}
                     isOpen={isInviteModalOpen}
                     onClose={() => setIsInviteModalOpen(false)}
@@ -429,6 +439,7 @@ export default function ContractDetailPage() {
                         }
 
                         try {
+                            setIsInviting(true);
                             const subject = "[FairAct] 전자 서명을 위한 계약에 초대되었습니다.";
 
                             const inviteUrl = `${window.location.origin}/contract/${contract.id}?invited=true`;
@@ -446,7 +457,7 @@ export default function ContractDetailPage() {
                         } finally {
                             setEmail("");
                             setIsInviteModalOpen(false);
-
+                            setIsInviting(false);
                         }
                     }}
                 />

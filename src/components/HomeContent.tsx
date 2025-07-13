@@ -11,23 +11,6 @@ import { getContractState } from "@/utils/state";
 import useUserStore from "@/stores/useUserStore";
 import { formatShortDate } from "@/utils/dateFormat";
 
-function updateRecentContractIds(newId: string): void {
-    const storageKey = "recentContractIds";
-
-    try {
-        const existing = JSON.parse(sessionStorage.getItem(storageKey) || "[]") as string[];
-
-        const withoutNewId = existing.filter((id) => id !== newId);
-
-        const updated = [newId, ...withoutNewId].slice(0, 3);
-
-        sessionStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (e) {
-        console.error("recentContractIds 업데이트 실패:", e);
-        sessionStorage.setItem(storageKey, JSON.stringify([newId]));
-    }
-}
-
 export default function HomeContent() {
     const [recentContracts, setRecentContracts] = useState([]);
     const [mySignContracts, setMySignContracts] = useState([]);
@@ -59,7 +42,6 @@ export default function HomeContent() {
     }, []);
 
     const handleContractClick = (contractId: string) => {
-        updateRecentContractIds(contractId);
         navigate(`/contract/${contractId}`);
     };
 
@@ -85,9 +67,9 @@ export default function HomeContent() {
                                 return sortedContracts.map((contract) => {
                                     const state = getContractState(
                                         contract.worker_email,
-                                        contract.isInviteAccepted,
-                                        contract.isOwnerSigned,
-                                        contract.isWorkerSigned,
+                                        contract.is_invite_accepted,
+                                        contract.is_owner_signed,
+                                        contract.is_worker_signed,
                                         user.user_id === contract.worker_id ? "worker" : "owner"
                                     );
                                     const formattedDate = formatShortDate(new Date(contract.modified_at * 1000));
