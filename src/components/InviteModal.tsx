@@ -3,13 +3,14 @@ import { useState } from "react";
 
 interface InviteModalProps {
     email: string;
+    isInviting: boolean;
     setEmail: (email: string) => void;
     isOpen: boolean;
     onClose: () => void;
     handleInvite: () => void;
 }
 
-const InviteModal: React.FC<InviteModalProps> = ({ email, setEmail, isOpen, onClose, handleInvite }) => {
+const InviteModal: React.FC<InviteModalProps> = ({ email, isInviting, setEmail, isOpen, onClose, handleInvite }) => {
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <div className="flex flex-col w-[700px] bg-white rounded-2xl p-8 py-16 shadow-lg items-center justify-center">
@@ -25,10 +26,15 @@ const InviteModal: React.FC<InviteModalProps> = ({ email, setEmail, isOpen, onCl
 
                 <div className="flex justify-center gap-4 mt-4">
                     <button
+                        disabled={isInviting}
                         onClick={handleInvite}
-                        className="px-6 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"
+                        className={`px-6 py-3 rounded-2xl font-bold transition 
+    ${isInviting
+                                ? "bg-blue-300 text-white cursor-not-allowed opacity-50"
+                                : "bg-blue-600 text-white hover:bg-blue-700"
+                            }`}
                     >
-                        초대하기
+                        {isInviting ? "전송 중..." : "초대"}
                     </button>
                 </div>
             </div>

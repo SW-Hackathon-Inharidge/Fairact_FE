@@ -48,7 +48,7 @@ export function SignStepTwo({ onNext }: { onNext: () => void }) {
     );
 }
 
-export function SignStepThree({ onConfirm }: { onConfirm: () => Promise<void> }) {
+export function SignStepThree({ onConfirm, isSigning }: { onConfirm: () => Promise<void>, isSigning: boolean }) {
     return (
         <div className="bg-white py-16 px-32 rounded-2xl flex flex-col items-center justify-center gap-6 shadow-lg">
             <h2 className="text-2xl font-bold">서류 작성을 위한 본인 인증을 요청합니다</h2>
@@ -58,8 +58,16 @@ export function SignStepThree({ onConfirm }: { onConfirm: () => Promise<void> })
                 <label><input type="checkbox" className="mr-2" defaultChecked /> 제3자정보제공동의(필수)</label><br />
                 <label><input type="checkbox" className="mr-2" defaultChecked /> 고유식별정보처리동의(필수)</label>
             </div>
-            <button onClick={onConfirm} className="bg-blue-500 mt-6 text-white py-2 px-8 rounded-xl">
-                완료
+            <button
+                disabled={isSigning}
+                onClick={onConfirm}
+                className={`mt-6 py-2 px-8 rounded-xl text-white transition 
+    ${isSigning
+                        ? "bg-blue-300 cursor-not-allowed opacity-50"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    }`}
+            >
+                {isSigning ? "서명 중..." : "서명하기"}
             </button>
         </div>
     );
