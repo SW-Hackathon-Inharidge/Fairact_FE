@@ -6,7 +6,7 @@ const userAxiosInstance = axios.create({
 });
 
 const contractAxiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_TEST_URL,
+    baseURL: import.meta.env.VITE_API_CONTRACT_URL,
     headers: { "Content-Type": "application/json" },
 });
 

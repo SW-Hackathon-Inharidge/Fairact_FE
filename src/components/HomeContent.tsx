@@ -28,9 +28,9 @@ export default function HomeContent() {
                     fetchContractsRequiringMySign(),
                     fetchContractsRequiringOpponentSign(),
                 ]);
-                setRecentContracts(recent);
-                setMySignContracts(mySign);
-                setOpponentSignContracts(opponentSign);
+                if(recent !== null) setRecentContracts(recent);
+                if(mySign !== null) setMySignContracts(mySign);
+                if(opponentSign !== null) setOpponentSignContracts(opponentSign);
             } catch (error) {
                 console.error("계약 데이터 로딩 실패:", error);
             } finally {
@@ -115,7 +115,7 @@ export default function HomeContent() {
                             "로딩 중..."
                         ) : mySignContracts.length > 0 ? (
                             <ul className="divide-y divide-gray-700 w-full max-h-[17rem] overflow-y-auto">
-                                {mySignContracts.map((contract) => (
+                                {mySignContracts?.map((contract) => (
                                     <div
                                         className="flex p-4 cursor-pointer"
                                         key={contract.id}
@@ -137,7 +137,7 @@ export default function HomeContent() {
                             </ul>
                         ) : (
                             <div className="flex p-16 w-full justify-center items-center h-full text-gray-400 text-lg">
-                                상대 서명 필요 계약이 없습니다.
+                                내 서명 필요 계약이 없습니다.
                             </div>
                         )}
                     </div>
@@ -153,7 +153,7 @@ export default function HomeContent() {
                             "로딩 중..."
                         ) : opponentSignContracts.length > 0 ? (
                             <ul className="divide-y divide-gray-700 w-full max-h-[17rem] overflow-y-auto">
-                                {opponentSignContracts.map((contract) => (
+                                {opponentSignContracts?.map((contract) => (
                                     <div
                                         className="flex p-4 cursor-pointer"
                                         key={contract.id}

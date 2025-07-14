@@ -115,12 +115,12 @@ export default function ContractDetailPage() {
         const connectSSE = () => {
             if (sseDetailRef.current || sseToxicRef.current) return;
 
-            const detailEventSource = new EventSource(`${import.meta.env.VITE_API_TEST_URL}/contract/sse/subscribe/detail`, {
+            const detailEventSource = new EventSource(`${import.meta.env.VITE_API_CONTRACT_URL}/contract/sse/subscribe/detail`, {
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem('access_token')}`
                 }
             });
-            const toxicEventSource = new EventSource(`${import.meta.env.VITE_API_TEST_URL}/contract/sse/subscribe/toxic-clause`, {
+            const toxicEventSource = new EventSource(`${import.meta.env.VITE_API_CONTRACT_URL}/contract/sse/subscribe/toxic-clause`, {
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem('access_token')}`
                 }
