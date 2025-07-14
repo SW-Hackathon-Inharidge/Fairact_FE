@@ -198,6 +198,7 @@ export default function ContractDetailPage() {
             try {
                 const res = await fetchUserSign();
                 if (res?.sign_uri_list) setSignUrlList(res.sign_uri_list);
+                console.log(signUrlList);
             } catch (e) {
                 console.error("서명 조회 실패", e);
             }
