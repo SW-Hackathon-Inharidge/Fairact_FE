@@ -6,6 +6,12 @@ import useUserStore from "@/stores/useUserStore";
 import Upload from "@/assets/icon/upload.png";
 import Right from "@/assets/icon/right.png";
 import White_Upload from "@/assets/icon/white-upload.png";
+import homeIcon from '@/assets/icon/home.png';
+import documentIcon from '@/assets/icon/document.png';
+import eyeOffIcon from '@/assets/icon/eye-off.png';
+import xSquareIcon from '@/assets/icon/x-square.png';
+import sharedContractIcon from '@/assets/icon/shared-contract.png';
+import checkIcon from '@/assets/icon/check.png';
 
 type SidebarProps = {
     categories: { key: string; label: string }[];
@@ -82,15 +88,10 @@ export default function Sidebar({
                     {categories.map(({ key, label }) => (
                         <button
                             key={key}
-                            className={`px-10 py-2 rounded-[5px] inline-flex items-center gap-6 w-full text-left ${selectedCategory === key ? "bg-blue-700 text-white" : "text-blue-100"
-                                }`}
+                            className={`px-10 py-2 rounded-[5px] inline-flex items-center gap-6 w-full text-left ${selectedCategory === key ? "bg-blue-700 text-white" : "text-blue-100"}`}
                             onClick={() => onSelectCategory(key)}
                         >
-                            <img
-                                src={`./src/assets/icon/${getIconName(key)}`}
-                                alt={label}
-                                className="w-6 h-6"
-                            />
+                            <img src={getIconByKey(key)} alt={label} className="w-6 h-6" />
                             <span className="text-2xl font-bold">{label}</span>
                         </button>
                     ))}
@@ -162,21 +163,14 @@ export default function Sidebar({
     );
 }
 
-function getIconName(key: string) {
+function getIconByKey(key: string) {
     switch (key) {
-        case "home":
-            return "home.png";
-        case "myDocuments":
-            return "document.png";
-        case "invitationPending":
-            return "eye-off.png";
-        case "mySignaturePending":
-            return "x-square.png";
-        case "otherSignaturePending":
-            return "shared-contract.png";
-        case "completedContracts":
-            return "check.png";
-        default:
-            return "home.png";
+        case 'home': return homeIcon;
+        case 'myDocuments': return documentIcon;
+        case 'invitationPending': return eyeOffIcon;
+        case 'mySignaturePending': return xSquareIcon;
+        case 'otherSignaturePending': return sharedContractIcon;
+        case 'completedContracts': return checkIcon;
+        default: return homeIcon;
     }
 }

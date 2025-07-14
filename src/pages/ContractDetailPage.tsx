@@ -198,7 +198,6 @@ export default function ContractDetailPage() {
             try {
                 const res = await fetchUserSign();
                 if (res?.sign_uri_list) setSignUrlList(res.sign_uri_list);
-                console.log(signUrlList);
             } catch (e) {
                 console.error("서명 조회 실패", e);
             }
@@ -396,6 +395,7 @@ export default function ContractDetailPage() {
                                                             } w-full flex flex-col`}
                                                     >
                                                         {signUrlList.map((signUrl, idx) => {
+                                                            console.log(signUrl);
                                                             const isSelected = selectedSignUrl === signUrl;
                                                             const isFirst = idx === 0;
                                                             return (
