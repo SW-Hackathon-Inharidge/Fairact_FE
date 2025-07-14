@@ -395,7 +395,6 @@ export default function ContractDetailPage() {
                                                             } w-full flex flex-col`}
                                                     >
                                                         {signUrlList.map((signUrl, idx) => {
-                                                            console.log(signUrl);
                                                             const isSelected = selectedSignUrl === signUrl;
                                                             const isFirst = idx === 0;
                                                             return (
