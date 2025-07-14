@@ -48,6 +48,7 @@ export default function ContractDetailPage() {
     const [signUrlList, setSignUrlList] = useState<string[]>([]);
     const [selectedSignUrl, setSelectedSignUrl] = useState<string | null>(null);
     const [clickPosition, setClickPosition] = useState<ClickPosition | null>(null);
+    const [hoveredClauseText, setHoveredClauseText] = useState<string | null>(null);
 
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -107,19 +108,19 @@ export default function ContractDetailPage() {
 
         const EventSource = EventSourcePolyfill || window.EventSource;
         const MAX_RETRIES = 10;
-        const RETRY_INTERVAL = 3000; 
+        const RETRY_INTERVAL = 3000;
         let retryCount = 0;
         let retryTimer: number | null = null;
 
         const connectSSE = () => {
             if (sseDetailRef.current || sseToxicRef.current) return;
 
-            const detailEventSource = new EventSource(`${import.meta.env.VITE_API_CONTRACT_URL}/contract/sse/subscribe/detail`, {
+            const detailEventSource = new EventSource(`${import.meta.env.VITE_API_TEST_URL}/contract/sse/subscribe/detail`, {
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem('access_token')}`
                 }
             });
-            const toxicEventSource = new EventSource(`${import.meta.env.VITE_API_CONTRACT_URL}/contract/sse/subscribe/toxic-clause`, {
+            const toxicEventSource = new EventSource(`${import.meta.env.VITE_API_TEST_URL}/contract/sse/subscribe/toxic-clause`, {
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem('access_token')}`
                 }
@@ -128,15 +129,12 @@ export default function ContractDetailPage() {
             sseDetailRef.current = detailEventSource;
             sseToxicRef.current = toxicEventSource;
 
-            detailEventSource.addEventListener("keep-alive", () => { 
-                console.log("keep-alive");
-            });
+            detailEventSource.addEventListener("keep-alive", () => { });
             toxicEventSource.addEventListener("keep-alive", () => { });
 
             detailEventSource.addEventListener("contract-detail", (event) => {
                 try {
                     const updatedContract: UploadContractResponse = JSON.parse(event.data);
-                    console.log("📩 SSE(contract-detail):", updatedContract);
                     setContract(updatedContract);
                 } catch (e) {
                     console.error("❌ SSE contract-detail 파싱 실패", e);
@@ -146,7 +144,6 @@ export default function ContractDetailPage() {
             toxicEventSource.addEventListener("toxic-clause", (event) => {
                 try {
                     const updated = JSON.parse(event.data);
-                    console.log("📩 SSE(toxic-clause):", updated);
                     setContract(updated);
                 } catch (e) {
                     console.error("❌ SSE toxic-clause 파싱 실패", e);
@@ -167,7 +164,6 @@ export default function ContractDetailPage() {
 
                 if (retryCount < MAX_RETRIES && !retryTimer) {
                     retryCount++;
-                    console.log(`🔁 ${type} SSE ${retryCount}회째 재연결 시도 예정...`);
                     retryTimer = setTimeout(() => {
                         retryTimer = null;
                         connectSSE();
@@ -184,7 +180,6 @@ export default function ContractDetailPage() {
         connectSSE();
 
         return () => {
-            console.log("🔌 SSE 연결 해제");
             retryTimer && clearTimeout(retryTimer);
             retryTimer = null;
 
@@ -341,10 +336,8 @@ export default function ContractDetailPage() {
                         <ToxicClauseList
                             contract={contract}
                             onAllChecked={setAllChecked}
-                            isSigned={
-                                (role === "worker" && contract.is_worker_signed) ||
-                                (role === "owner" && contract.is_owner_signed)
-                            }
+                            isSigned={isSigned}
+                            hoveredClauseText={hoveredClauseText}
                         />
                         <main className="flex-1 flex flex-col pt-32 pl-24 overflow-hidden justify-between">
                             <div className="flex h-full gap-16">
@@ -358,6 +351,7 @@ export default function ContractDetailPage() {
                                         markerPosition={isSigned ? undefined : clickPosition}
                                         ownerSignPosition={ownerSignPosition}
                                         workerSignPosition={workerSignPosition}
+                                        onHighlightHover={setHoveredClauseText}
                                     />
                                 </div>
 
@@ -368,6 +362,7 @@ export default function ContractDetailPage() {
                                         </div>
                                     </div>
                                 ) : (
+
                                     <div className="flex flex-col w-72 justify-between">
                                         <div className="flex flex-col items-center">
                                             <p className="text-blue-500 text-lg font-bold my-4 text-center">

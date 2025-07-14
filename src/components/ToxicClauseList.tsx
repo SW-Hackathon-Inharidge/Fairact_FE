@@ -3,12 +3,13 @@ import { UploadContractResponse } from "@/services/contract";
 import { useEffect, useState } from "react";
 
 interface ToxicClauseListProps {
-    contract: UploadContractResponse
+    contract: UploadContractResponse;
     onAllChecked: (checked: boolean) => void;
-    isSigned: boolean
+    isSigned: boolean;
+    hoveredClauseText?: string | null;
 }
 
-export default function ToxicClauseList({ contract, onAllChecked, isSigned }: ToxicClauseListProps) {
+export default function ToxicClauseList({ contract, onAllChecked, isSigned, hoveredClauseText }: ToxicClauseListProps) {
     const safeClauses = Array.isArray(contract.clauses) ? contract.clauses : [];
 
     const [checkedStates, setCheckedStates] = useState<boolean[]>(() =>
@@ -23,6 +24,15 @@ export default function ToxicClauseList({ contract, onAllChecked, isSigned }: To
         const allChecked = checkedStates.every((v) => v);
         onAllChecked(allChecked);
     }, [checkedStates, onAllChecked]);
+
+    useEffect(() => {
+        if (!hoveredClauseText) return;
+
+        const element = document.getElementById(`clause-${hoveredClauseText}`);
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [hoveredClauseText]);
 
     const handleCheckChange = (index: number, checked: boolean) => {
         const newStates = [...checkedStates];
@@ -42,17 +52,19 @@ export default function ToxicClauseList({ contract, onAllChecked, isSigned }: To
 
             <div className="overflow-y-auto flex-1 w-full pr-2 py-4 pb-40 mt-24 mb-8 flex flex-col gap-24">
                 {safeClauses.map((clause, index) => (
-                    <ToxicClause
-                        key={index}
-                        // text={clause.clause.text}
-                        reason={clause.reason}
-                        suggestion={clause.suggestion}
-                        confirmText="아래 내용을 확인하고 이해했습니다"
-                        checked={checkedStates[index] ?? false}
-                        onCheck={(checked) => handleCheckChange(index, checked)}
-                        hideCheckbox={isSigned}
-                    />
+                    <div key={index} id={`clause-${clause.clause?.text ?? `unknown-${index}`}`}>
+                        <ToxicClause
+                            text={clause.clause?.text ?? ""}
+                            reason={clause.reason}
+                            suggestion={clause.suggestion}
+                            confirmText="아래 내용을 확인하고 이해했습니다"
+                            checked={checkedStates[index] ?? false}
+                            onCheck={(checked) => handleCheckChange(index, checked)}
+                            hideCheckbox={isSigned}
+                        />
+                    </div>
                 ))}
+
             </div>
         </aside>
     );

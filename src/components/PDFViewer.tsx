@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 import PdfWorker from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker";
 import { UploadContractResponse } from "@/services/contract";
+import HighlightBox from "./HighlightBox";
 
 (pdfjsLib.GlobalWorkerOptions as any).workerPort = new PdfWorker();
 
@@ -14,6 +15,7 @@ type PDFViewerProps = {
     onPdfClick?: (x: number, y: number, pageNum: number) => void;
     ownerSignPosition?: PositionWithPage | null;
     workerSignPosition?: PositionWithPage | null;
+    onHighlightHover?: (clauseText: string | null) => void;
 };
 
 type PageData = {
@@ -32,6 +34,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     onPdfClick,
     ownerSignPosition,
     workerSignPosition,
+    onHighlightHover
 }) => {
     const [pdfDoc, setPdfDoc] = useState<any>(null);
     const [pages, setPages] = useState<PageData[]>([]);
@@ -193,6 +196,23 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                             }}
                         />
                     )}
+
+                    {contract.clauses
+                        ?.flatMap((clause) =>
+                            clause.clause?.segment_positions?.map((seg) => ({
+                                segment: seg,
+                                text: clause.clause?.text,
+                            })) ?? []
+                        )
+                        .filter(({ segment }) => segment.page_index === pageNum - 1)
+                        .map(({ segment, text }, i) => (
+                            <HighlightBox
+                                key={i}
+                                segment={segment}
+                                onMouseEnter={() => onHighlightHover?.(text ?? "")}
+                                onMouseLeave={() => onHighlightHover?.(null)}
+                            />
+                        ))}
                 </div>
             ))}
         </div>
