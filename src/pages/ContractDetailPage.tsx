@@ -278,9 +278,8 @@ export default function ContractDetailPage() {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-            await uploadUserSign(file);
-            const url = URL.createObjectURL(file);
-            setSignUrlList((prev) => [...prev, url]);
+            const res = await uploadUserSign(file);
+            if (res?.sign_uri_list) setSignUrlList(res.sign_uri_list);
         } catch {
             toast.error("서명 업로드 실패");
         }

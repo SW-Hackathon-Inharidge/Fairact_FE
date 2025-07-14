@@ -127,8 +127,6 @@ export async function fetchContractDetail(contractId: string): Promise<UploadCon
 
 export async function signContract(contractId: string, sign_x: number, sign_y: number, sign_page: number, pre_signed_sign_uri: string): Promise<UploadContractResponse> {
     try {
-        console.log(pre_signed_sign_uri);
-
         const response = await contractAxiosInstance.patch<UploadContractResponse>(
             `/contract/${contractId}/sign`,
             {
