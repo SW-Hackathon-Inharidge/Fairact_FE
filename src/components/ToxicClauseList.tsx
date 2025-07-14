@@ -41,7 +41,7 @@ export default function ToxicClauseList({ contract, onAllChecked, isSigned, hove
     };
 
     return (
-        <aside className="w-1/5 bg-blue-500 flex-shrink-0 pt-28 px-8 flex flex-col items-center h-screen">
+        <aside className="w-1/4 bg-blue-500 flex-shrink-0 pt-28 px-8 flex flex-col items-center h-screen">
             <p className="text-white text-2xl font-bold pt-12 text-center truncate w-full max-w-full">
                 {contract.title}
             </p>
