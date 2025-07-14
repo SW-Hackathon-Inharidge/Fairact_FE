@@ -10,6 +10,8 @@ import ContractRow from "./ContractRow";
 import { getContractState } from "@/utils/state";
 import useUserStore from "@/stores/useUserStore";
 import { formatShortDate } from "@/utils/dateFormat";
+import Good from "@/assets/icon/good.png";
+import Loader from "@/assets/icon/loader.png";
 
 export default function HomeContent() {
     const [recentContracts, setRecentContracts] = useState([]);
@@ -78,7 +80,7 @@ export default function HomeContent() {
                                         <div className="flex p-2 cursor-pointer" key={contract.id} onClick={() => handleContractClick(contract.id)}>
                                             <ContractRow
                                                 status={state === "계약 완료" ? "완료" : "진행중"}
-                                                iconSrc={state === "계약 완료" ? "./src/assets/icon/good.png" : "./src/assets/icon/loader.png"}
+                                                iconSrc={state === "계약 완료" ? Good : Loader}
                                                 title={contract.title}
                                                 owner={contract.owner_name}
                                                 worker={

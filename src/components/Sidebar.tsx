@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Modal from "@/components/Modal";
 import { createContract, UploadContractResponse } from "@/services/contract";
 import useUserStore from "@/stores/useUserStore";
+import Upload from "@/assets/icon/upload.png";
+import Right from "@/assets/icon/right.png";
+import White_Upload from "@/assets/icon/white-upload.png";
 
 type SidebarProps = {
     categories: { key: string; label: string }[];
@@ -64,7 +67,7 @@ export default function Sidebar({
                     onKeyDown={(e) => userInfo && e.key === "Enter" && openFileModal()}
                 >
                     <img
-                        src="./src/assets/icon/upload.png"
+                        src={Upload}
                         className={userInfo ? "w-6 h-6" : "w-6 h-6 opacity-50"}
                         alt="업로드 아이콘"
                     />
@@ -132,7 +135,7 @@ export default function Sidebar({
                                 htmlFor="fileInput"
                                 className="bg-sky-700 rounded-2xl inline-flex items-center gap-2.5 px-6 py-2 text-white text-lg font-normal font-['Inter'] leading-9 cursor-pointer hover:bg-sky-800 transition"
                             >
-                                <img src="./src/assets/icon/white-upload.png" alt="파일 선택" className="w-6 h-6" />
+                                <img src={White_Upload} alt="파일 선택" className="w-6 h-6" />
                                 파일 선택
                             </label>
 
@@ -148,7 +151,7 @@ export default function Sidebar({
                                     }`}
                             >
                                 <span>{isUploading ? "업로드 중..." : "다음"}</span>
-                                <img src="./src/assets/icon/right.png" alt="다음" className="w-6 h-6" />
+                                <img src={Right} alt="다음" className="w-6 h-6" />
                             </button>
                         </div>
                     </div>
