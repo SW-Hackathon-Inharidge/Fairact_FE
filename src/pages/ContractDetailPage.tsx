@@ -338,7 +338,7 @@ export default function ContractDetailPage() {
                             isSigned={isSigned}
                             hoveredClauseText={hoveredClauseText}
                         />
-                        <main className="flex-1 flex flex-col pt-32 pl-24 overflow-hidden justify-between">
+                        <main className="flex-1 flex flex-col pt-32 pl-12 overflow-hidden justify-between">
                             <div className="flex h-full gap-16">
                                 <div
                                     className="flex-1 overflow-y-auto"
